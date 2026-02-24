@@ -1,4 +1,4 @@
-module tidy
+module nexus-backend
 
 go 1.25.7
 
