@@ -28,7 +28,6 @@ services:
     volumes:
       - ./backend:/app
 
-  # frontend 
   frontend:
     build: ./frontend
     ports:
