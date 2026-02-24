@@ -1,7 +1,6 @@
 package scanner
 
 import (
-	"fmt"
 	"time"
 
 	"nexus-backend/models"
@@ -9,27 +8,26 @@ import (
 )
 
 func StartWorker(db *gorm.DB) {
-	go func() {
-		fmt.Println(" Worker de monitoring démarré...")
+	ticker := time.NewTicker(1 * time.Minute)
 
-		for {
+	go func() {
+		for range ticker.C {
 			var sites []models.Site
-			result := db.Find(&sites)
-			if result.Error != nil {
-				fmt.Printf(" Erreur lors de la lecture des sites: %v\n", result.Error)
-			} else {
-				fmt.Printf(" Scan en cours : %d sites à vérifier...\n", len(sites))
-				for _, site := range sites {
-					fmt.Printf(" Vérification de : %s\n", site.URL)
-					isUp := true 
-					db.Model(&site).Updates(map[string]interface{}{
-						"is_up":       isUp,
-						"last_status": 200,
-					})
-				}
+			if err := db.Find(&sites).Error; err != nil {
+				continue
 			}
-			fmt.Println(" Scan terminé. Prochaine vérification dans 1 minute.")
-			time.Sleep(1 * time.Minute)
+
+			for _, site := range sites {
+				go func(s models.Site) {
+					success, statusCode := CheckSite(s.URL)
+					
+					db.Model(&s).Updates(map[string]interface{}{
+						"is_up":       success,
+						"last_status": statusCode,
+						"updated_at":  time.Now(),
+					})
+				}(site)
+			}
 		}
 	}()
 }
