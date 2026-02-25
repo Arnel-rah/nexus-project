@@ -19,11 +19,10 @@ func StartWorker(db *gorm.DB) {
 
 			for _, site := range sites {
 				go func(s models.Site) {
-					success, statusCode := CheckSite(s.URL)
-					
-					db.Model(&s).Updates(map[string]interface{}{
-						"is_up":       success,
-						"last_status": statusCode,
+					result := CheckSite(s.URL, 10*time.Second)
+						db.Model(&s).Updates(map[string]interface{}{
+						"is_up":       result.Up,
+						"last_status": 200, 
 						"updated_at":  time.Now(),
 					})
 				}(site)
