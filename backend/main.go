@@ -9,14 +9,19 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-
 	"nexus-backend/models"
 	"nexus-backend/scanner"
 )
 
 func main() {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=5432 sslmode=disable",
-		os.Getenv("DB_HOST"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=5432 sslmode=disable",
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
+	)
+
 	time.Sleep(2 * time.Second)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -25,8 +30,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := db.AutoMigrate(&models.Site{}); err != nil {
+	if err := db.AutoMigrate(&models.Site{}, &models.SiteHistory{}); err != nil {
 		fmt.Printf("Migration error: %v\n", err)
+		os.Exit(1)
 	}
 
 	go scanner.StartWorker(db)
@@ -52,7 +58,13 @@ func main() {
 
 		api.GET("/sites", func(c *gin.Context) {
 			var sites []models.Site
-			if err := db.Find(&sites).Error; err != nil {
+			err := db.
+				Preload("History", func(db *gorm.DB) *gorm.DB {
+					return db.Order("checked_at DESC").Limit(20)
+				}).
+				Find(&sites).Error
+
+			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 				return
 			}
@@ -70,6 +82,31 @@ func main() {
 				return
 			}
 			c.JSON(http.StatusCreated, site)
+		})
+
+		api.GET("/sites/:id/history", func(c *gin.Context) {
+			id := c.Param("id")
+			var history []models.SiteHistory
+			err := db.
+				Where("site_id = ?", id).
+				Order("checked_at DESC").
+				Limit(50).
+				Find(&history).Error
+
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+				return
+			}
+			c.JSON(http.StatusOK, history)
+		})
+		api.DELETE("/sites/:id", func(c *gin.Context) {
+			id := c.Param("id")
+			if err := db.Delete(&models.Site{}, id).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete site"})
+				return
+			}
+			db.Where("site_id = ?", id).Delete(&models.SiteHistory{})
+			c.JSON(http.StatusOK, gin.H{"message": "Site supprimé"})
 		})
 	}
 
