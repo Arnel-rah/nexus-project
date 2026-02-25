@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"nexus-backend/models"
+
 	"gorm.io/gorm"
 )
 
@@ -18,12 +19,19 @@ func StartWorker(db *gorm.DB) {
 		for _, site := range sites {
 			go func(s models.Site) {
 				result := CheckSite(s.URL, 10*time.Second)
-				
+
 				db.Model(&s).Updates(map[string]interface{}{
 					"is_up":       result.Up,
-					"last_status": 200, 
+					"last_status": 200,
 					"latency":     result.Latency.Milliseconds(),
-					"updated_at":  time.Now(),
+					"last_check":  time.Now(),
+				})
+
+				db.Create(&models.SiteHistory{
+					SiteID:    s.ID,
+					IsUp:      result.Up,
+					Latency:   result.Latency.Milliseconds(),
+					CheckedAt: time.Now(),
 				})
 			}(site)
 		}
