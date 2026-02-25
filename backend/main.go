@@ -15,40 +15,35 @@ import (
 )
 
 func main() {
-	// CONNEXION DB
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=5432 sslmode=disable",
 		os.Getenv("DB_HOST"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
-
 	time.Sleep(2 * time.Second)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		fmt.Printf("Erreur de connexion DB: %v\n", err)
+		fmt.Printf("Database connection error: %v\n", err)
 		os.Exit(1)
 	}
 
-	// MIGRATIONS
-	db.AutoMigrate(&models.Site{})
+	if err := db.AutoMigrate(&models.Site{}); err != nil {
+		fmt.Printf("Migration error: %v\n", err)
+	}
 
-	// LANCEMENT  WORKER 
-	go scanner.StartWorker(db) 
+	go scanner.StartWorker(db)
 
-	// CONFIGURATION SERVEUR API
 	r := gin.Default()
 
-	// Middleware CORS 
 	r.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
+		if c.Request.Method == http.MethodOptions {
+			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
 		c.Next()
 	})
 
-	// ROUTES
 	api := r.Group("/api")
 	{
 		api.GET("/ping", func(c *gin.Context) {
@@ -57,7 +52,10 @@ func main() {
 
 		api.GET("/sites", func(c *gin.Context) {
 			var sites []models.Site
-			db.Find(&sites)
+			if err := db.Find(&sites).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+				return
+			}
 			c.JSON(http.StatusOK, sites)
 		})
 
@@ -67,11 +65,14 @@ func main() {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
 			}
-			db.Create(&site)
+			if err := db.Create(&site).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create site"})
+				return
+			}
 			c.JSON(http.StatusCreated, site)
 		})
 	}
 
-	fmt.Println("Backend Nexus démarré sur le port 8080")
+	fmt.Println("Server running on port 8080")
 	r.Run(":8080")
 }
