@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { Globe, Activity, ExternalLink, Zap, Clock } from 'lucide-react';
 import type { Site } from '../types/site';
 
 interface Props {
@@ -9,6 +8,7 @@ interface Props {
 
 export const SiteCard: React.FC<Props> = ({ site, nextScanIn }) => {
   const isUp: boolean = site.is_up;
+
   const history = useMemo(() => {
     const data = site.history ?? [];
     return [...data].sort(
@@ -39,170 +39,326 @@ export const SiteCard: React.FC<Props> = ({ site, nextScanIn }) => {
   const secs: number = nextScanIn % 60;
   const countdownPct: number = ((60 - nextScanIn) / 60) * 100;
 
-  const cleanUrl: string = site.url
-    .replace('https://', '')
-    .replace('http://', '');
+  const cleanUrl: string = site.url.replace(/^https?:\/\//, '');
 
   const getBarColor = (isUp: boolean, latency: number): string => {
-    if (!isUp) return 'bg-red-400';
-    if (latency > 500) return 'bg-yellow-400';
-    return 'bg-green-400/70';
+    if (!isUp) return '#ef4444';
+    if (latency > 500) return '#f59e0b';
+    return '#10b981';
   };
 
   const getUptimeColor = (uptime: number | null): string => {
-    if (uptime === null) return 'text-slate-400';
-    if (uptime === 100) return 'text-green-600';
-    if (uptime >= 80) return 'text-yellow-500';
-    return 'text-red-500';
+    if (uptime === null) return '#64748b';
+    if (uptime === 100) return '#10b981';
+    if (uptime >= 80) return '#f59e0b';
+    return '#ef4444';
   };
+
+  const accentColor = isUp ? '#10b981' : '#ef4444';
+  const accentRgb = isUp ? '16, 185, 129' : '239, 68, 68';
 
   return (
     <div
-      className={[
-        'group relative overflow-hidden rounded-2xl border',
-        'transition-all duration-500',
-        'hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]',
-        isUp
-          ? 'bg-white border-slate-200/60 hover:border-green-200'
-          : 'bg-white border-slate-200/60 hover:border-red-200',
-      ].join(' ')}
+      style={{
+        position: 'relative',
+        background: 'linear-gradient(145deg, #0f1117 0%, #13161f 100%)',
+        borderRadius: '20px',
+        border: `1px solid rgba(${accentRgb}, 0.15)`,
+        overflow: 'hidden',
+        fontFamily: "'DM Sans', 'Inter', sans-serif",
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
+        cursor: 'default',
+        boxShadow: `0 0 0 0 rgba(${accentRgb}, 0)`,
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget;
+        el.style.transform = 'translateY(-3px)';
+        el.style.boxShadow = `0 20px 60px -15px rgba(${accentRgb}, 0.25), 0 0 0 1px rgba(${accentRgb}, 0.2)`;
+        el.style.borderColor = `rgba(${accentRgb}, 0.35)`;
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget;
+        el.style.transform = 'translateY(0)';
+        el.style.boxShadow = `0 0 0 0 rgba(${accentRgb}, 0)`;
+        el.style.borderColor = `rgba(${accentRgb}, 0.15)`;
+      }}
     >
+      {/* Ambient glow top-right */}
       <div
-        className={[
-          'absolute -right-12 -top-12 h-24 w-24 rounded-full blur-3xl',
-          'opacity-10 transition-opacity group-hover:opacity-20',
-          isUp ? 'bg-green-500' : 'bg-red-500',
-        ].join(' ')}
+        style={{
+          position: 'absolute',
+          top: -60,
+          right: -60,
+          width: 180,
+          height: 180,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, rgba(${accentRgb}, 0.12) 0%, transparent 70%)`,
+          pointerEvents: 'none',
+        }}
       />
 
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-5">
-          <div className="flex items-center gap-3">
-            <div
-              className={[
-                'relative flex h-11 w-11 items-center justify-center rounded-2xl border',
-                'transition-transform duration-300 group-hover:scale-110',
-                isUp
-                  ? 'bg-green-50/50 border-green-100 text-green-600'
-                  : 'bg-red-50/50 border-red-100 text-red-600',
-              ].join(' ')}
-            >
-              <Globe size={20} strokeWidth={1.5} />
+      {/* Top accent line */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: '10%',
+          right: '10%',
+          height: 1,
+          background: `linear-gradient(90deg, transparent, rgba(${accentRgb}, 0.6), transparent)`,
+        }}
+      />
+
+      <div style={{ padding: '24px' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {/* Icon + pulse */}
+            <div style={{ position: 'relative' }}>
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  background: `rgba(${accentRgb}, 0.08)`,
+                  border: `1px solid rgba(${accentRgb}, 0.2)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {/* Globe SVG */}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" stroke={accentColor}>
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+              </div>
               {isUp && (
-                <span className="absolute -right-1 -top-1 flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
-                </span>
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: -3,
+                    right: -3,
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    background: accentColor,
+                    boxShadow: `0 0 0 3px rgba(${accentRgb}, 0.3)`,
+                  }}
+                />
               )}
             </div>
 
             <div>
-              <h3 className="font-bold text-slate-900 tracking-tight leading-none">
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: '#f1f5f9',
+                  letterSpacing: '-0.3px',
+                  lineHeight: 1.2,
+                }}
+              >
                 {site.name}
               </h3>
               <a
                 href={site.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-indigo-500 transition-colors mt-1"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  marginTop: 4,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: '#475569',
+                  textDecoration: 'none',
+                  transition: 'color 0.2s',
+                  maxWidth: 160,
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                  textOverflow: 'ellipsis',
+                }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = '#818cf8')}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = '#475569')}
               >
-                <span className="truncate max-w-30">{cleanUrl}</span>
-                <ExternalLink size={11} />
+                {cleanUrl}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3" />
+                </svg>
               </a>
             </div>
           </div>
 
+          {/* Status badge */}
           <div
-            className={[
-              'inline-flex items-center px-2.5 py-1 rounded-full',
-              'text-[11px] font-bold uppercase tracking-wider',
-              isUp
-                ? 'bg-green-100/60 text-green-700 border border-green-200/50'
-                : 'bg-red-100/60 text-red-700 border border-red-200/50',
-            ].join(' ')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '5px 11px',
+              borderRadius: 99,
+              background: `rgba(${accentRgb}, 0.1)`,
+              border: `1px solid rgba(${accentRgb}, 0.25)`,
+            }}
           >
-            {isUp ? 'Online' : 'Down'}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="rounded-xl bg-slate-50/80 p-3 border border-slate-100 group-hover:bg-white transition-colors">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Activity size={12} className="text-slate-400" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                Latency
-              </span>
-            </div>
-            <div className="flex items-baseline gap-1">
-              <span className={`text-lg font-bold font-mono ${isUp ? 'text-slate-700' : 'text-red-400'}`}>
-                {site.latency ?? '---'}
-              </span>
-              <span className="text-[10px] text-slate-400">ms</span>
-            </div>
-          </div>
-
-          <div className="rounded-xl bg-slate-50/80 p-3 border border-slate-100 group-hover:bg-white transition-colors">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Zap size={12} className="text-slate-400" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                Uptime
-              </span>
-            </div>
-            <div className="flex items-baseline gap-1">
-              <span className={`text-lg font-bold font-mono ${getUptimeColor(uptime)}`}>
-                {uptime !== null ? uptime : '---'}
-              </span>
-              <span className="text-[10px] text-slate-400">%</span>
-            </div>
-          </div>
-        </div>
-
-        {history.length > 0 && (
-          <div className="mb-4">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-              Historique latence
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: accentColor,
+                display: 'block',
+                boxShadow: `0 0 6px ${accentColor}`,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                color: accentColor,
+                textTransform: 'uppercase',
+              }}
+            >
+              {isUp ? 'Online' : 'Down'}
             </span>
-            <div className="flex items-end gap-0.5 h-10 mt-1.5">
-              {history.slice(-20).map((h, i) => {
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
+          {[
+            {
+              label: 'Latency',
+              value: site.latency ?? '---',
+              unit: 'ms',
+              icon: (
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+              ),
+              color: isUp ? '#e2e8f0' : '#ef4444',
+            },
+            {
+              label: 'Uptime',
+              value: uptime ?? '---',
+              unit: '%',
+              icon: (
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                </svg>
+              ),
+              color: getUptimeColor(uptime),
+            },
+          ].map(({ label, value, unit, icon, color }) => (
+            <div
+              key={label}
+              style={{
+                borderRadius: 14,
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                padding: '12px 14px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
+                {icon}
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  {label}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                <span style={{ fontSize: 22, fontWeight: 800, fontFamily: "'DM Mono', monospace", color, lineHeight: 1 }}>
+                  {value}
+                </span>
+                <span style={{ fontSize: 11, color: '#475569', fontWeight: 500 }}>{unit}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* History bars */}
+        {history.length > 0 && (
+          <div style={{ marginBottom: 18 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Latency history
+            </span>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 36, marginTop: 10 }}>
+              {history.slice(-24).map((h, i) => {
                 const heightPct: number = Math.max((h.latency / maxLatency) * 100, 8);
+                const color = getBarColor(h.is_up, h.latency);
                 return (
                   <div
                     key={i}
-                    className="group/bar relative flex-1 rounded-sm transition-all duration-300"
-                    style={{ height: `${heightPct}%` }}
-                  >
-                    <div className={`absolute inset-0 rounded-sm ${getBarColor(h.is_up, h.latency)}`} />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover/bar:flex flex-col items-center z-10">
-                      <div className="bg-slate-800 text-white text-[10px] font-mono px-1.5 py-0.5 rounded whitespace-nowrap">
-                        {h.is_up ? `${h.latency}ms` : 'DOWN'}
-                      </div>
-                      <div className="w-1.5 h-1.5 bg-slate-800 rotate-45 -mt-0.5" />
-                    </div>
-                  </div>
+                    title={h.is_up ? `${h.latency}ms` : 'DOWN'}
+                    style={{
+                      flex: 1,
+                      height: `${heightPct}%`,
+                      borderRadius: 3,
+                      background: color,
+                      opacity: 0.7,
+                      transition: 'opacity 0.15s, transform 0.15s',
+                      cursor: 'default',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.opacity = '1';
+                      (e.currentTarget as HTMLElement).style.transform = 'scaleY(1.05)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.opacity = '0.7';
+                      (e.currentTarget as HTMLElement).style.transform = 'scaleY(1)';
+                    }}
+                  />
                 );
               })}
             </div>
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <Clock size={11} />
-            <span className="text-[10px] font-medium">
-              {updatedAt ? `Vérifié à ${updatedAt}` : 'Jamais vérifié'}
+        {/* Footer */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingTop: 14,
+            borderTop: '1px solid rgba(255,255,255,0.05)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+            </svg>
+            <span style={{ fontSize: 10, fontWeight: 500, color: '#334155' }}>
+              {updatedAt ? `${updatedAt}` : 'Never checked'}
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <div className="w-16 h-1 bg-slate-100 rounded-full overflow-hidden">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* Countdown bar */}
+            <div
+              style={{
+                width: 52,
+                height: 3,
+                borderRadius: 99,
+                background: 'rgba(255,255,255,0.06)',
+                overflow: 'hidden',
+              }}
+            >
               <div
-                className="h-full bg-blue-400 rounded-full transition-all duration-1000"
-                style={{ width: `${countdownPct}%` }}
+                style={{
+                  height: '100%',
+                  width: `${countdownPct}%`,
+                  background: 'linear-gradient(90deg, #6366f1, #818cf8)',
+                  borderRadius: 99,
+                  transition: 'width 1s linear',
+                }}
               />
             </div>
-            <span className="text-[10px] font-mono text-slate-400">
-              {mins > 0 ? `${mins}m` : ''}
-              {String(secs).padStart(2, '0')}s
+            <span style={{ fontSize: 10, fontFamily: "'DM Mono', monospace", fontWeight: 600, color: '#334155', letterSpacing: '0.04em' }}>
+              {mins > 0 ? `${mins}m` : ''}{String(secs).padStart(2, '0')}s
             </span>
           </div>
         </div>
