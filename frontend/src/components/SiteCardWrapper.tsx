@@ -30,7 +30,6 @@ const SiteCardWrapper: React.FC<SiteCardWrapperProps> = ({
     >
       <SiteCard site={site} nextScanIn={nextScanIn} />
 
-      {/* Hover action buttons */}
       <div
         style={{
           position: 'absolute',
