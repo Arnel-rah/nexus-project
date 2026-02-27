@@ -53,14 +53,21 @@ const App: React.FC = () => {
   }, []);
 
 
-  const handleAdd = async (data: SiteFormData) => {
-    await fetch('http://localhost:8080/api/sites', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    await fetchData();
-  };
+ const handleAdd = async (data: SiteFormData) => {
+  const res = await fetch('http://localhost:8080/api/sites', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? 'Failed to create site');
+  }
+
+  await fetchData();
+  setModal(null);
+};
 
   const handleEdit = async (data: SiteFormData) => {
     if (modal?.type !== 'edit') return;
