@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"nexus-backend/models"
@@ -73,15 +75,32 @@ func main() {
 		})
 
 		api.POST("/sites", func(c *gin.Context) {
-			var site models.Site
-			if err := c.ShouldBindJSON(&site); err != nil {
+			var input struct {
+				Name string `json:"name" binding:"required,min=1,max=100"`
+				URL  string `json:"url"  binding:"required,url"`
+			}
+
+			if err := c.ShouldBindJSON(&input); err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
 			}
+
+			site := models.Site{
+				Name: strings.TrimSpace(input.Name),
+				URL:  strings.TrimSpace(input.URL),
+			}
+
 			if err := db.Create(&site).Error; err != nil {
+				if strings.Contains(err.Error(), "UNIQUE constraint") ||
+					strings.Contains(err.Error(), "duplicate key") {
+					c.JSON(http.StatusConflict, gin.H{"error": "A site with this URL already exists"})
+					return
+				}
+				log.Printf("ERROR create site %q: %v", site.URL, err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create site"})
 				return
 			}
+
 			c.JSON(http.StatusCreated, site)
 		})
 
