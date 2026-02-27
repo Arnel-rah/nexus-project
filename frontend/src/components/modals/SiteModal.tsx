@@ -31,8 +31,8 @@ const SiteModal: React.FC<SiteModalProps> = ({ title, initial, onClose, onSubmit
     try {
       await onSubmit(form);
       onClose();
-    } catch {
-      setError('Failed to save. Please try again.');
+    }catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save. Please try again.');
       setSaving(false);
     }
   };
