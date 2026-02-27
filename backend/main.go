@@ -6,11 +6,12 @@ import (
 	"os"
 	"time"
 
+	"nexus-backend/models"
+	"nexus-backend/scanner"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"nexus-backend/models"
-	"nexus-backend/scanner"
 )
 
 func main() {
@@ -101,11 +102,22 @@ func main() {
 		})
 		api.DELETE("/sites/:id", func(c *gin.Context) {
 			id := c.Param("id")
-			if err := db.Delete(&models.Site{}, id).Error; err != nil {
+
+			tx := db.Begin()
+
+			if err := tx.Delete(&models.Site{}, id).Error; err != nil {
+				tx.Rollback()
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete site"})
 				return
 			}
-			db.Where("site_id = ?", id).Delete(&models.SiteHistory{})
+
+			if err := tx.Where("site_id = ?", id).Delete(&models.SiteHistory{}).Error; err != nil {
+				tx.Rollback()
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete history"})
+				return
+			}
+
+			tx.Commit()
 			c.JSON(http.StatusOK, gin.H{"message": "Site supprimé"})
 		})
 	}
