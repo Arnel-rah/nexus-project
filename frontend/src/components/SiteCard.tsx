@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { Globe, Zap, ShieldCheck, Clock } from "lucide-react";
 
 interface HistoryPoint {
   checked_at: string;
@@ -23,7 +24,7 @@ interface SiteCardProps {
 
 export const SiteCard: React.FC<SiteCardProps> = ({ site, nextScanIn }) => {
   const isUp = site.is_up;
-    const theme = {
+  const theme = {
     accent: isUp ? "#00e5a0" : "#ff4757",
     rgb: isUp ? "0, 229, 160" : "255, 71, 87",
     bg: isUp ? "rgba(0, 229, 160, 0.03)" : "rgba(255, 71, 87, 0.03)",
@@ -57,7 +58,7 @@ export const SiteCard: React.FC<SiteCardProps> = ({ site, nextScanIn }) => {
           background: `radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(${theme.rgb}, 0.12), transparent 40%)`
         }}
       />
-      <div className="absolute top-0 left-0 h-[1px] w-full overflow-hidden">
+      <div className="absolute top-0 left-0 h-1 w-full overflow-hidden">
         <div 
           className="h-full w-1/3 animate-[shimmer_3s_infinite]"
           style={{ background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)` }}
@@ -79,7 +80,7 @@ export const SiteCard: React.FC<SiteCardProps> = ({ site, nextScanIn }) => {
                     color: theme.accent 
                 }}
               >
-                <GlobeIcon />
+                <Globe size={20} strokeWidth={1.5} />
               </div>
             </div>
             <div>
@@ -97,31 +98,29 @@ export const SiteCard: React.FC<SiteCardProps> = ({ site, nextScanIn }) => {
           </div>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <StatBox 
             label="Latency" 
             value={site.latency ?? "---"} 
             unit="ms" 
             accent={theme.accent} 
-            icon={<ZapIcon />} 
+            icon={<Zap size={10} strokeWidth={2.5} />} 
           />
           <StatBox 
             label="Uptime" 
             value={uptime} 
             unit="%" 
             accent={uptime > 95 ? "#00e5a0" : "#ffa502"} 
-            icon={<ShieldIcon />} 
+            icon={<ShieldCheck size={10} strokeWidth={2.5} />} 
           />
         </div>
 
-        {/* Mini Graph */}
         <div className="mb-6">
           <div className="flex justify-between text-[9px] font-bold text-slate-600 uppercase mb-2 font-syne">
             <span>Activity Log</span>
             <span className="font-mono text-slate-400">24 Cycles</span>
           </div>
-          <div className="flex items-end gap-[2px] h-10">
+          <div className="flex items-end gap-2 h-10">
             {history.map((h, i) => (
               <div
                 key={i}
@@ -134,9 +133,10 @@ export const SiteCard: React.FC<SiteCardProps> = ({ site, nextScanIn }) => {
             ))}
           </div>
         </div>
+
         <div className="flex items-center justify-between pt-4 border-t border-slate-800/50">
           <div className="flex items-center gap-2 text-slate-500 font-mono text-[10px]">
-             <ClockIcon />
+             <Clock size={12} strokeWidth={2} />
              <span>{new Date(site.last_check).toLocaleTimeString('fr-FR')}</span>
           </div>
           
@@ -155,8 +155,15 @@ export const SiteCard: React.FC<SiteCardProps> = ({ site, nextScanIn }) => {
   );
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const StatBox = ({ label, value, unit, accent, icon }: any) => (
+interface StatBoxProps {
+  label: string;
+  value: string | number;
+  unit: string;
+  accent: string;
+  icon: React.ReactNode;
+}
+
+const StatBox: React.FC<StatBoxProps> = ({ label, value, unit, accent, icon }) => (
   <div className="rounded-xl border border-slate-800/50 bg-slate-900/30 p-3 hover:bg-slate-800/40 transition-colors">
     <div className="flex items-center gap-2 mb-2 text-slate-600">
       {icon}
@@ -168,8 +175,3 @@ const StatBox = ({ label, value, unit, accent, icon }: any) => (
     </div>
   </div>
 );
-
-const GlobeIcon = () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>;
-const ZapIcon = () => <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>;
-const ShieldIcon = () => <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
-const ClockIcon = () => <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>;
