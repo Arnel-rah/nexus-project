@@ -102,7 +102,7 @@ const App: React.FC = () => {
           to   { opacity: 1; transform: translateY(0); }
         }
         .card-appear { animation: gridFade 0.5s cubic-bezier(0.22,1,0.36,1) both; }
-        input::placeholder { color: #1e2d3d; }
+        input::placeholder { color: #475569; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #1e2d3d; border-radius: 99px; }
@@ -233,7 +233,7 @@ const App: React.FC = () => {
                   gap: 4,
                 }}
               >
-                <span style={{ color: '#64748b' }}>sync</span>{' '}
+                <span style={{ color: '#ffff' }}>sync</span>{' '}
                 {lastUpdated.toLocaleTimeString('fr-FR', {
                   hour: '2-digit',
                   minute: '2-digit',
