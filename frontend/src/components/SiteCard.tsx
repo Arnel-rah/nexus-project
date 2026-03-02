@@ -2,21 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Globe, Zap, ShieldCheck, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 
-interface HistoryPoint {
-  checked_at: string;
-  is_up: boolean;
-  latency: number;
-}
-
-interface Site {
-  id: number | string;
-  name: string;
-  url: string;
-  is_up: boolean;
-  latency: number | null;
-  last_check: string;
-  history?: HistoryPoint[];
-}
+import type { Site, SiteHistory as HistoryPoint } from '../types/site';
 
 interface SiteCardProps {
   site: Site;
@@ -279,6 +265,7 @@ export const SiteCard: React.FC<SiteCardProps> = ({ site, nextScanIn }) => {
             </span>
           </div>
         </div>
+
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
           <StatBox label="Latency" value={site.latency ?? "---"} unit="ms" accent={accent} icon={<Zap size={9} strokeWidth={2.5} />} />
           <StatBox label="Uptime" value={uptime} unit="%" accent={uptimeAccent(uptime)} icon={<ShieldCheck size={9} strokeWidth={2.5} />} />
