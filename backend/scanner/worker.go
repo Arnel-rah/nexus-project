@@ -9,7 +9,7 @@ import (
 )
 
 func StartWorker(db *gorm.DB) {
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(time.Millisecond)
 	performScan := func() {
 		var sites []models.Site
 		if err := db.Find(&sites).Error; err != nil {
